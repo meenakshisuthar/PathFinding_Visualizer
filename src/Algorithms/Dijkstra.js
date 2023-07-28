@@ -82,7 +82,7 @@ function getUnvisitedNeighbours(node, grid) {
     // Filter out any neighbors that are already visited (i.e., not unvisited)
     return neighbours.filter((neighbour) => !neighbour.isVisited);
 }
-export function getNodesInShortestPathOrderDijkstra(finishNode) {
+export function getNodesInShortestPathOrder(finishNode) {
     let nodesInShortestPathOrder = [];
     let currentNode = finishNode;
   
