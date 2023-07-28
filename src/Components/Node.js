@@ -12,8 +12,7 @@ const Node = ({
   row,
   isVisited,
   isShortestPath,
-  setStartNode,
-  setFinishNode,
+ 
 }) => {
   const nodeClassName = `node ${isVisited ? 'node-visited' : ''} ${isShortestPath ? 'node-shortest-path' : ''}`;
   const extraClassName = isStart
