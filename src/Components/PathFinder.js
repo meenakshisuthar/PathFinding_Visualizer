@@ -1,7 +1,7 @@
 import React, {useState } from 'react'
-// import {randomMaze} from '../MazeAlgorithm/randomMaze';
-// import {VerticalMaze} from '../MazeAlgorithm/VerticalMaze';
-// import {HorizontalMaze} from '../MazeAlgorithm/HorizontalMaze';
+import {randomMaze} from '../MazeAlgorithm/randomMaze';
+import {SimpleMaze} from '../MazeAlgorithm/SimpleMaze';
+import {StairCaseMaze} from '../MazeAlgorithm/StairCaseMaze';
 import { dijkstra, getNodesInShortestPathOrder } from '../Algorithms/Dijkstra';
 import { DFS } from '../Algorithms/DFS';
 import { BFS } from '../Algorithms/BFS';
@@ -41,7 +41,7 @@ const PathFinder = () => {
   const [grid, setGrid] = useState(getInitialGrid());
   const [mouseIsPressed, setMouseIsPressed] = useState(false);
   const [isRunning, setIsRunning] = useState(false);  
-  // const [visited, setVisited] = useState([]);
+
 
 const handleMouseDown = (row, col) => {
     const newGrid = getNewGridWithWallToggled(grid, row, col);
@@ -177,19 +177,62 @@ const clearGrid = () => {
       setGrid(newGrid);
     }
 };
+const resetGrid = () => {
+  const newGrid = [];
+  for (let row = 0; row < 20; row++) {
+    const currentRow = [];
+    for (let col = 0; col < 50; col++) {
+      currentRow.push(createNode(col, row));
+    }
+    newGrid.push(currentRow);
+  }
+  setGrid(newGrid);
+};
 
+//****************************Random Maze Generator*******************************//
+const RandomMazeGenerator = () => {
+  resetGrid();
+  const startNode = grid[START_NODE_ROW][START_NODE_COL];
+  const finishNode = grid[FINISH_NODE_ROW][FINISH_NODE_COL];
+  const visitedWalls = randomMaze(grid, startNode, finishNode);
+  animateWalls(visitedWalls);
+}; 
+
+const animateWalls = (visitedWalls) => {
+  for (let i = 0; i < visitedWalls.length ;i++) {
+    setTimeout(() => {
+      const node = visitedWalls[i];
+      setGrid(prevState => {
+        const updatedWallGrid = prevState.map(row =>
+          row.map(currNode =>
+            currNode.row === node.row && currNode.col === node.col
+              ? { ...currNode, isWall: true }
+              : currNode
+          )
+        );
+        return updatedWallGrid;
+      });
+    }, 10*i); 
+  }
+};
+//****************************Horizontal Maze Generator*******************************//
+const horizontalMazeGenerator = () => {
+  // resetGrid();
+  const visitedHorizontalWall = StairCaseMaze(grid);
+  animateWalls(visitedHorizontalWall);
+}; 
+//****************************Horizontal Maze Generator*******************************//
+const SimpleMazeGenerator = () => {
+  // resetGrid();
+  const simpleWall = SimpleMaze(grid);
+  animateWalls(simpleWall);
+}; 
 return (
     <>
     <div className="buttons">
-    {/* <select name="maze" id="maze" onChange={MazeHandler}> 
-            <option value="maze" disabled hidden>
-              Select Maze
-            </option>
-            <option value="random">Random Maze</option>
-            <option value="simple">Simple Maze</option>
-            <option value="staircase">Staircase Maze</option>
-    </select> */}
-    {/* <button onClick={randomMazeHandler}>Random Maze</button> */}
+    <button onClick={SimpleMazeGenerator}>Simple Maze</button>
+    <button onClick={RandomMazeGenerator}>Random Maze</button>
+    <button onClick={horizontalMazeGenerator}>StairCase Maze</button>
     <button onClick={visualizeDijkstra}>Visualize Dijkstra's Algorithm</button>
     <button onClick={visualizeDFS}>Visualize DFS</button>
     <button onClick={visualizeBFS}>Visualize BFS</button>

@@ -11,10 +11,12 @@ export function randomMaze(grid, startNode, finishNode) {
         )
           continue;
         if (Math.random() < 0.33) {
-          walls.push([row, col]);
+          const node = grid[row][col];
+          const wallNode = { ...node, isWall: true };
+          walls.push(wallNode);
         }
       }
     }
-    walls.sort(() => Math.random() - 0.5);
+    // walls.sort(() => Math.random() - 0.5);
     return walls;
 }
