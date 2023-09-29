@@ -41,8 +41,7 @@ const PathFinder = () => {
   const [grid, setGrid] = useState(getInitialGrid());
   const [mouseIsPressed, setMouseIsPressed] = useState(false);
   const [isRunning, setIsRunning] = useState(false);  
-
-
+  
 const handleMouseDown = (row, col) => {
     const newGrid = getNewGridWithWallToggled(grid, row, col);
     setGrid(newGrid);
@@ -199,12 +198,12 @@ const RandomMazeGenerator = () => {
 }; 
 
 const animateWalls = (visitedWalls) => {
-  for (let i = 0; i < visitedWalls.length ;i++) {
+  for (let i = 0; i < visitedWalls.length; i++) {
     setTimeout(() => {
       const node = visitedWalls[i];
-      setGrid(prevState => {
-        const updatedWallGrid = prevState.map(row =>
-          row.map(currNode =>
+      setGrid((prevState) => {
+        const updatedWallGrid = prevState.map((row) =>
+          row.map((currNode) =>
             currNode.row === node.row && currNode.col === node.col
               ? { ...currNode, isWall: true }
               : currNode
@@ -212,12 +211,12 @@ const animateWalls = (visitedWalls) => {
         );
         return updatedWallGrid;
       });
-    }, 10*i); 
+    }, 10 * i);
   }
 };
+
 //****************************Horizontal Maze Generator*******************************//
-const horizontalMazeGenerator = () => {
-  // resetGrid();
+const StairCaseMazeGenerator = () => {
   const visitedHorizontalWall = StairCaseMaze(grid);
   animateWalls(visitedHorizontalWall);
 }; 
@@ -232,7 +231,7 @@ return (
     <div className="buttons">
     <button onClick={SimpleMazeGenerator}>Simple Maze</button>
     <button onClick={RandomMazeGenerator}>Random Maze</button>
-    <button onClick={horizontalMazeGenerator}>StairCase Maze</button>
+    <button onClick={StairCaseMazeGenerator}>StairCase Maze</button>
     <button onClick={visualizeDijkstra}>Visualize Dijkstra's Algorithm</button>
     <button onClick={visualizeDFS}>Visualize DFS</button>
     <button onClick={visualizeBFS}>Visualize BFS</button>

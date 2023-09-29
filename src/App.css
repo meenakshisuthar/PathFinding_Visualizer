@@ -1,3 +1,22 @@
 .App {
     text-align: center;
   }
+  .buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin: 10px;
+  }
+  
+.buttons button {
+    border-radius: 5px;
+    padding: 5px 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+  
+.buttons button:hover {
+    background-color: #a65bc7;
+}
+   
