@@ -41,61 +41,87 @@ const PathFinder = () => {
   const [grid, setGrid] = useState(getInitialGrid());
   const [mouseIsPressed, setMouseIsPressed] = useState(false);
   const [isRunning, setIsRunning] = useState(false);  
-  
-const handleMouseDown = (row, col) => {
-    const newGrid = getNewGridWithWallToggled(grid, row, col);
-    setGrid(newGrid);
-    setMouseIsPressed(true);
-};
-  
-const handleMouseEnter = (row, col) => {
-    if (!mouseIsPressed) return;
-    const newGrid = getNewGridWithWallToggled(grid, row, col);
-    setGrid(newGrid);
-};
-  
-const handleMouseUp = () => {
-    setMouseIsPressed(false);
+  const [settingStartNode, setSettingStartNode] = useState(false);
+const [settingEndNode, setSettingEndNode] = useState(false);
+
+
+const toggleNodeSetting = (settingType) => {
+  setSettingStartNode(settingType === 'start');
+  setSettingEndNode(settingType === 'end');
 };
 
-const getNewGridWithWallToggled = (grid, row, col) => {
-    const newGrid = grid.map((rowArr, rowIndex) =>
+  
+const handleMouseDown = (row, col) => {
+  if (settingStartNode || settingEndNode) {
+    updateNode(row, col, settingStartNode ? 'isStart' : 'isFinish');
+    toggleNodeSetting(null);
+  } else {
+    toggleWallState(row, col);
+    setMouseIsPressed(true);
+  }
+};
+
+const updateNode = (row, col, property) => {
+  setGrid(prevGrid =>
+      prevGrid.map((r, rowIndex) =>
+          r.map((node, colIndex) => {
+              let updatedNode = { ...node };
+              if (property === 'isStart' || property === 'isFinish') {
+                  // Reset the previous start/end node
+                  if (node[property]) {
+                      updatedNode[property] = false;
+                  }
+                  // Set the new start/end node
+                  if (rowIndex === row && colIndex === col) {
+                      updatedNode[property] = true;
+                  }
+              }
+              return updatedNode;
+          })
+      )
+  );
+};
+
+const toggleWallState = (row, col) => {
+  setGrid((prevGrid) =>
+    prevGrid.map((rowArr, rowIndex) =>
       rowArr.map((node, colIndex) => {
         if (rowIndex === row && colIndex === col) {
-          return {
-            ...node,
-            isWall: !node.isWall,
-          };
+          return { ...node, isWall: !node.isWall };
         }
         return node;
       })
-    );
-    return newGrid;
+    )
+  );
 };
-//****************************Dijkstra Visualization*******************************//
-const visualizeDijkstra = () => {
-  const startNode = grid[START_NODE_ROW][START_NODE_COL];
-  const finishNode = grid[FINISH_NODE_ROW][FINISH_NODE_COL];
-  const visitedNodesInOrder = dijkstra(grid, startNode, finishNode);
+  
+const handleMouseEnter = (row, col) => {
+  if (!mouseIsPressed) return;
+  toggleWallState(row, col);
+};
+
+const handleMouseUp = () => {
+  setMouseIsPressed(false);
+};
+
+const findNode = (grid, property) => {
+  for (let row of grid) {
+    for (let node of row) {
+      if (node[property]) return node;
+    }
+  }
+  return null; // Or handle error
+};
+
+//****************************Visualization*******************************//
+const visualizeAlgorithm = (algorithm) => {
+  setIsRunning(true);
+  const startNode = findNode(grid, 'isStart');
+  const finishNode = findNode(grid, 'isFinish');
+  const visitedNodesInOrder = algorithm(grid, startNode, finishNode);
   const nodesInShortestPathOrder = getNodesInShortestPathOrder(finishNode);
   animate(visitedNodesInOrder, nodesInShortestPathOrder);
-}; 
-//****************************Dijkstra Visualization*******************************//
-const visualizeBFS = () => {
-  const startNode = grid[START_NODE_ROW][START_NODE_COL];
-  const finishNode = grid[FINISH_NODE_ROW][FINISH_NODE_COL];
-  const visitedNodesInOrder = BFS(grid, startNode, finishNode);
-  const nodesInShortestPathOrder = getNodesInShortestPathOrder(finishNode);
-  animate(visitedNodesInOrder, nodesInShortestPathOrder);
-}; 
-//****************************DFS Visualization*******************************//
-const visualizeDFS = () => {
-  const startNode = grid[START_NODE_ROW][START_NODE_COL];
-  const finishNode = grid[FINISH_NODE_ROW][FINISH_NODE_COL];
-  const visitedNodesInOrder = DFS(grid, startNode, finishNode);
-  const nodesInShortestPathOrder = getNodesInShortestPathOrder(finishNode);
-  animate(visitedNodesInOrder, nodesInShortestPathOrder);
-}; 
+};
 
 //****************************Animation Function*******************************//
 const animate = (visitedNodesInOrder, nodesInShortestPathOrder) => {
@@ -129,6 +155,9 @@ const animateShortestPath = (nodesInShortestPathOrder) => {
               if (currNode.row === node.row && currNode.col === node.col) {
                 return { ...currNode, isShortestPath: true };
               }
+              if (i === nodesInShortestPathOrder.length - 1) {
+                setIsRunning(false); // Stop running once the animation is complete
+            }
               return currNode;
             })
           );
@@ -155,42 +184,27 @@ const clearWalls = () => {
  
 //****************************Clear Grid*******************************//  
 const clearGrid = () => {
-    if (!isRunning) {
-      const newGrid = grid.map((row) =>
-        row.map((node) => {
-          if (node.isStart || node.isFinish || node.isWall) {
-            // Preserve start and finish nodes, but clear their properties
-            return {
+  const newGrid = grid.map(row =>
+      row.map(node => {
+          return {
               ...node,
-              isShortestPath: false,
               isVisited: false,
+              isShortestPath: false,
               distance: Infinity,
-              previousNode: null,
-            };
-          } else {
-            // Reset other nodes
-            return createNode(node.col, node.row);
-          }
-        })
-      );
-      setGrid(newGrid);
-    }
-};
-const resetGrid = () => {
-  const newGrid = [];
-  for (let row = 0; row < 20; row++) {
-    const currentRow = [];
-    for (let col = 0; col < 50; col++) {
-      currentRow.push(createNode(col, row));
-    }
-    newGrid.push(currentRow);
-  }
+              previousNode: null
+          };
+      })
+  );
   setGrid(newGrid);
 };
 
+
+
 //****************************Random Maze Generator*******************************//
 const RandomMazeGenerator = () => {
-  resetGrid();
+  if (!isRunning) {
+    setGrid(getInitialGrid());
+  }
   const startNode = grid[START_NODE_ROW][START_NODE_COL];
   const finishNode = grid[FINISH_NODE_ROW][FINISH_NODE_COL];
   const visitedWalls = randomMaze(grid, startNode, finishNode);
@@ -222,21 +236,22 @@ const StairCaseMazeGenerator = () => {
 }; 
 //****************************Horizontal Maze Generator*******************************//
 const SimpleMazeGenerator = () => {
-  // resetGrid();
   const simpleWall = SimpleMaze(grid);
   animateWalls(simpleWall);
 }; 
 return (
     <>
     <div className="buttons">
+    <button onClick={() => toggleNodeSetting('start')} >Set Start Node</button>
+    <button onClick={() => toggleNodeSetting('end')} >Set End Node</button>
     <button onClick={SimpleMazeGenerator}>Simple Maze</button>
     <button onClick={RandomMazeGenerator}>Random Maze</button>
     <button onClick={StairCaseMazeGenerator}>StairCase Maze</button>
-    <button onClick={visualizeDijkstra}>Visualize Dijkstra's Algorithm</button>
-    <button onClick={visualizeDFS}>Visualize DFS</button>
-    <button onClick={visualizeBFS}>Visualize BFS</button>
+    <button onClick={() => visualizeAlgorithm(dijkstra)} disabled={isRunning}>Visualize Dijkstra's Algorithm</button>
+    <button onClick={() => visualizeAlgorithm(DFS)} disabled={isRunning}>Visualize DFS</button>
+    <button onClick={() => visualizeAlgorithm(BFS)} disabled={isRunning}>Visualize BFS</button>
     <button onClick={clearWalls}>Clear Walls</button>
-    <button onClick={clearGrid}>Clear Grid</button>
+    <button onClick={clearGrid} >Clear Grid</button>
     </div>
     <div className='grid'>
        {grid.map((row, rowIdx) =>(
